@@ -1,0 +1,313 @@
+{
+  "contractName": "Errors",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "FailedCall",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "FailedDeployment",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "balance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "needed",
+          "type": "uint256"
+        }
+      ],
+      "name": "InsufficientBalance",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "MissingPrecompile",
+      "type": "error"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.22+commit.4fc1097e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"FailedCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedDeployment\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"needed\",\"type\":\"uint256\"}],\"name\":\"InsufficientBalance\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"MissingPrecompile\",\"type\":\"error\"}],\"devdoc\":{\"details\":\"Collection of common custom errors used in multiple contracts IMPORTANT: Backwards compatibility is not guaranteed in future versions of the library. It is recommended to avoid relying on the error API for critical functionality. _Available since v5.1._\",\"errors\":{\"FailedCall()\":[{\"details\":\"A call to an address target failed. The target may have reverted.\"}],\"FailedDeployment()\":[{\"details\":\"The deployment failed.\"}],\"InsufficientBalance(uint256,uint256)\":[{\"details\":\"The ETH balance of the account is not enough to perform the operation.\"}],\"MissingPrecompile(address)\":[{\"details\":\"A necessary precompile is missing.\"}]},\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"@openzeppelin/contracts/utils/Errors.sol\":\"Errors\"},\"evmVersion\":\"shanghai\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/utils/Errors.sol\":{\"keccak256\":\"0x6afa713bfd42cf0f7656efa91201007ac465e42049d7de1d50753a373648c123\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ba1d02f4847670a1b83dec9f7d37f0b0418d6043447b69f3a29a5f9efc547fcf\",\"dweb:/ipfs/QmQ7iH2keLNUKgq2xSWcRmuBE5eZ3F5whYAkAGzCNNoEWB\"]}},\"version\":1}",
+  "bytecode": "0x60556032600b8282823980515f1a607314602657634e487b7160e01b5f525f60045260245ffd5b305f52607381538281f3fe730000000000000000000000000000000000000000301460806040525f80fdfea2646970667358221220510a5ad495e1438132483fe1dd6559465e77b82dcbbdcce54ff5897327a4bc0664736f6c63430008160033",
+  "deployedBytecode": "0x730000000000000000000000000000000000000000301460806040525f80fdfea2646970667358221220510a5ad495e1438132483fe1dd6559465e77b82dcbbdcce54ff5897327a4bc0664736f6c63430008160033",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "411:484:9:-:0;;;;;;;;;;;;;;;-1:-1:-1;;;411:484:9;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "411:484:9:-:0;;;;;;;;",
+  "source": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.1.0) (utils/Errors.sol)\n\npragma solidity ^0.8.20;\n\n/**\n * @dev Collection of common custom errors used in multiple contracts\n *\n * IMPORTANT: Backwards compatibility is not guaranteed in future versions of the library.\n * It is recommended to avoid relying on the error API for critical functionality.\n *\n * _Available since v5.1._\n */\nlibrary Errors {\n    /**\n     * @dev The ETH balance of the account is not enough to perform the operation.\n     */\n    error InsufficientBalance(uint256 balance, uint256 needed);\n\n    /**\n     * @dev A call to an address target failed. The target may have reverted.\n     */\n    error FailedCall();\n\n    /**\n     * @dev The deployment failed.\n     */\n    error FailedDeployment();\n\n    /**\n     * @dev A necessary precompile is missing.\n     */\n    error MissingPrecompile(address);\n}\n",
+  "sourcePath": "@openzeppelin/contracts/utils/Errors.sol",
+  "ast": {
+    "absolutePath": "@openzeppelin/contracts/utils/Errors.sol",
+    "exportedSymbols": {
+      "Errors": [
+        1307
+      ]
+    },
+    "id": 1308,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1287,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".20"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "100:24:9"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "Errors",
+        "contractDependencies": [],
+        "contractKind": "library",
+        "documentation": {
+          "id": 1288,
+          "nodeType": "StructuredDocumentation",
+          "src": "126:284:9",
+          "text": " @dev Collection of common custom errors used in multiple contracts\n IMPORTANT: Backwards compatibility is not guaranteed in future versions of the library.\n It is recommended to avoid relying on the error API for critical functionality.\n _Available since v5.1._"
+        },
+        "fullyImplemented": true,
+        "id": 1307,
+        "linearizedBaseContracts": [
+          1307
+        ],
+        "name": "Errors",
+        "nameLocation": "419:6:9",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 1289,
+              "nodeType": "StructuredDocumentation",
+              "src": "432:94:9",
+              "text": " @dev The ETH balance of the account is not enough to perform the operation."
+            },
+            "errorSelector": "cf479181",
+            "id": 1295,
+            "name": "InsufficientBalance",
+            "nameLocation": "537:19:9",
+            "nodeType": "ErrorDefinition",
+            "parameters": {
+              "id": 1294,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1291,
+                  "mutability": "mutable",
+                  "name": "balance",
+                  "nameLocation": "565:7:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1295,
+                  "src": "557:15:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1290,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "557:7:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1293,
+                  "mutability": "mutable",
+                  "name": "needed",
+                  "nameLocation": "582:6:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1295,
+                  "src": "574:14:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1292,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "574:7:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "556:33:9"
+            },
+            "src": "531:59:9"
+          },
+          {
+            "documentation": {
+              "id": 1296,
+              "nodeType": "StructuredDocumentation",
+              "src": "596:89:9",
+              "text": " @dev A call to an address target failed. The target may have reverted."
+            },
+            "errorSelector": "d6bda275",
+            "id": 1298,
+            "name": "FailedCall",
+            "nameLocation": "696:10:9",
+            "nodeType": "ErrorDefinition",
+            "parameters": {
+              "id": 1297,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "706:2:9"
+            },
+            "src": "690:19:9"
+          },
+          {
+            "documentation": {
+              "id": 1299,
+              "nodeType": "StructuredDocumentation",
+              "src": "715:46:9",
+              "text": " @dev The deployment failed."
+            },
+            "errorSelector": "b06ebf3d",
+            "id": 1301,
+            "name": "FailedDeployment",
+            "nameLocation": "772:16:9",
+            "nodeType": "ErrorDefinition",
+            "parameters": {
+              "id": 1300,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "788:2:9"
+            },
+            "src": "766:25:9"
+          },
+          {
+            "documentation": {
+              "id": 1302,
+              "nodeType": "StructuredDocumentation",
+              "src": "797:58:9",
+              "text": " @dev A necessary precompile is missing."
+            },
+            "errorSelector": "42b01bce",
+            "id": 1306,
+            "name": "MissingPrecompile",
+            "nameLocation": "866:17:9",
+            "nodeType": "ErrorDefinition",
+            "parameters": {
+              "id": 1305,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1304,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1306,
+                  "src": "884:7:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1303,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "884:7:9",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "883:9:9"
+            },
+            "src": "860:33:9"
+          }
+        ],
+        "scope": 1308,
+        "src": "411:484:9",
+        "usedErrors": [
+          1295,
+          1298,
+          1301,
+          1306
+        ],
+        "usedEvents": []
+      }
+    ],
+    "src": "100:796:9"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.22+commit.4fc1097e.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.16",
+  "updatedAt": "2025-06-22T14:20:43.865Z",
+  "devdoc": {
+    "details": "Collection of common custom errors used in multiple contracts IMPORTANT: Backwards compatibility is not guaranteed in future versions of the library. It is recommended to avoid relying on the error API for critical functionality. _Available since v5.1._",
+    "errors": {
+      "FailedCall()": [
+        {
+          "details": "A call to an address target failed. The target may have reverted."
+        }
+      ],
+      "FailedDeployment()": [
+        {
+          "details": "The deployment failed."
+        }
+      ],
+      "InsufficientBalance(uint256,uint256)": [
+        {
+          "details": "The ETH balance of the account is not enough to perform the operation."
+        }
+      ],
+      "MissingPrecompile(address)": [
+        {
+          "details": "A necessary precompile is missing."
+        }
+      ]
+    },
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}
