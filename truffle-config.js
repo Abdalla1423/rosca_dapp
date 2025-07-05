@@ -1,3 +1,12 @@
+const ganache = require("ganache");
+
+
+// create exactly one provider for the whole session
+const devProvider = ganache.provider({
+  hardfork: "shanghai", // use Istanbul hardfork
+  wallet: { totalAccounts: 10, unlockedAccounts: [] }, // defaults are fine
+});
+
 /** Truffle config – tuned for local Ganache. */
 module.exports = {
   networks: {

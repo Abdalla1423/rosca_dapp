@@ -1,0 +1,134 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0xf2eff0282c27A63187927F82068cbb5C283bFCfB",
+      "txHash": "0x858a6c9fe1d2a1d32b8da4a366fdaa9b479ae5e0bc0cb2b29a4e48ca5be0ab1a",
+      "kind": "uups"
+    },
+    {
+      "address": "0x077fbBe110D97aaA9f06Db48d759dBAd8605d9b7",
+      "txHash": "0x256064118fb1a33f30342297dfc2eaa132ee4cd0de0f68101f3e9ac435c95c7c",
+      "kind": "uups"
+    },
+    {
+      "address": "0x9E82a8C689dBe0D1099098472A51F1eECB3f75c3",
+      "txHash": "0xf66202587d5cf9ecc903f8a6d7a1d3bf693ecf291101e163acb6e964ba2a7a4d",
+      "kind": "uups"
+    },
+    {
+      "address": "0x7216352170394ee9c10C9a4C72a8504d8a3bEE3A",
+      "txHash": "0x4fdfc78babb350cbe240de9dd2f26a33e473a51064ee381788d2976d5066306e",
+      "kind": "uups"
+    },
+    {
+      "address": "0x7e0c5F01EfDE3C66578F69FfF53b142fe691Ac0C",
+      "txHash": "0xfe9c78d3f4ed1eb83fe83b24ea80f36a9ba8612e99faa1f08237bf83b83e7d4f",
+      "kind": "uups"
+    },
+    {
+      "address": "0xd9a96516655844B7925797E38956ceBA205d4b94",
+      "txHash": "0xc324610ef8bbdaa93fc2528fbf47de0efcbfc9db8bd6416c0a34488533b935e4",
+      "kind": "uups"
+    },
+    {
+      "address": "0x899F3270288d66c84a7105C2d678bce307DD332B",
+      "txHash": "0x84750c72319d112432852023e8d0c2cd39135f5b2ae3b97ff58872abd425d34e",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "b1ad89b5c90f925d70d76553fde8c73d1bd66d93b1cdd3f6c71bf472bf03109c": {
+      "address": "0xf0910c28cdD261740ec7F67d4De2708E3f2E15A9",
+      "txHash": "0x5faa1622d4eebb20e4e96c8fd261d5e7835241cda18bfae97afc1ac438311605",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "contract": "ROSCA",
+            "label": "contributionAmount",
+            "type": "t_uint256",
+            "src": "../project:/contracts/ROSCA.sol:19"
+          },
+          {
+            "contract": "ROSCA",
+            "label": "interval",
+            "type": "t_uint256",
+            "src": "../project:/contracts/ROSCA.sol:20"
+          },
+          {
+            "contract": "ROSCA",
+            "label": "participants",
+            "type": "t_array(t_address)dyn_storage",
+            "src": "../project:/contracts/ROSCA.sol:21"
+          },
+          {
+            "contract": "ROSCA",
+            "label": "currentCycle",
+            "type": "t_uint256",
+            "src": "../project:/contracts/ROSCA.sol:26"
+          },
+          {
+            "contract": "ROSCA",
+            "label": "nextPayoutTime",
+            "type": "t_uint256",
+            "src": "../project:/contracts/ROSCA.sol:27"
+          },
+          {
+            "contract": "ROSCA",
+            "label": "hasContributed",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))",
+            "src": "../project:/contracts/ROSCA.sol:30"
+          }
+        ],
+        "types": {
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
+            "label": "mapping(uint256 => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

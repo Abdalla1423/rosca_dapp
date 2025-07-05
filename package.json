@@ -15,10 +15,11 @@
     "@openzeppelin/test-helpers": "^0.5.16"
   },
   "devDependencies": {
+    "@openzeppelin/truffle-upgrades": "^1.21.0",
     "chai": "^4.4.1",
-    "ganache": "^7.9.1",
-    "truffle": "^5.11.5",
-    "@openzeppelin/truffle-upgrades": "^1.21.0"
+    "ganache": "^7.9.2",
+    "hardhat": "^2.25.0",
+    "truffle": "^5.11.5"
   },
   "engines": {
     "node": ">=18.0.0"

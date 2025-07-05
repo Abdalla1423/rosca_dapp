@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.22;
+
+import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ROSCA.sol";
+
+contract ROSCAFactory is Ownable {
+    using Clones for address;
+
+    address public immutable implementation;
+    address[] public allGroups;
+    mapping(address => address[]) public groupsByCreator;
+
+    event GroupCreated(address indexed group, address indexed creator);
+
+    constructor(address _implementation) Ownable(msg.sender) {
+        require(_implementation != address(0), "impl = 0");
+        implementation = _implementation;
+    }
+
+    /*──────────────────────────
+      External API
+    ──────────────────────────*/
+    /**
+     * @param _amount   Contribution per round (wei)
+     * @param _interval Min seconds between payouts
+     * @param _members  Initial participant list (may be empty; people can join later)
+     */
+    function createGroup(
+        uint256 _amount,
+        uint256 _interval,
+        address[] calldata _members
+    ) external returns (address group) {
+        // 1. Clone
+        group = implementation.clone();
+
+        // 2. Initialise clone’s storage (delegatecall to implementation)
+        ROSCA(payable(group)).initialize(_amount, _interval, _members);
+
+        // 3. Book-keeping
+        allGroups.push(group);
+        groupsByCreator[msg.sender].push(group);
+
+        emit GroupCreated(group, msg.sender);
+    }
+
+    /* View helpers */
+    function allGroupsLength() external view returns (uint256) {
+        return allGroups.length;
+    }
+
+    function groupsOf(address creator) external view returns (address[] memory) {
+        return groupsByCreator[creator];
+    }
+}
