@@ -25,18 +25,15 @@ contract ROSCAFactory is Ownable {
     /**
      * @param _amount   Contribution per round (wei)
      * @param _interval Min seconds between payouts
-     * @param _members  Initial participant list (may be empty; people can join later)
-     */
+    * @param _maxMembers Maximum number of members in the group
+    */
     function createGroup(
         uint256 _amount,
         uint256 _interval,
-        address[] calldata _members
+        uint256 _maxMembers     // instead of _members[]
     ) external returns (address group) {
-        // 1. Clone
         group = implementation.clone();
-
-        // 2. Initialise clone’s storage (delegatecall to implementation)
-        ROSCA(payable(group)).initialize(_amount, _interval, _members);
+        ROSCA(payable(group)).initialize(_amount, _interval, _maxMembers);
 
         // 3. Book-keeping
         allGroups.push(group);

@@ -18,7 +18,9 @@ contract ROSCA is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     //////////////////////////////////////////////////////////////*/
     uint256 public contributionAmount;   // fixed per‑round payment (wei)
     uint256 public interval;             // min seconds between payouts
-    address[] public participants;       // payout order (static after start)
+    address[] public participants;     // unchanged
+    uint256  public maxParticipants;   // NEW
+    bool     public started;           // NEW – false until roster full
 
     /*//////////////////////////////////////////////////////////////
                                 STATE
@@ -47,18 +49,20 @@ contract ROSCA is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function initialize(
         uint256 _amount,
         uint256 _interval,
-        address[] calldata _members
+        uint256 _maxParticipants
     ) external initializer {
-        require(_members.length > 1, "Need >= 2 participants");
+        require(_maxParticipants > 1, "Need >= 2 participants");
 
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
 
         contributionAmount = _amount;
         interval           = _interval;
-        participants       = _members;
+        maxParticipants    = _maxParticipants;
+        started            = false;               // NEW
         currentCycle       = 0;
-        nextPayoutTime     = block.timestamp + _interval;
+        nextPayoutTime     = 0;                   // will be set on start
+
     }
 
     /// @dev Authorises UUPS upgrades – owner only
@@ -67,8 +71,28 @@ contract ROSCA is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /*//////////////////////////////////////////////////////////////
                                PARTICIPATION
     //////////////////////////////////////////////////////////////*/
+
+    event ParticipantJoined(address indexed who, uint256 indexed index);
+    event GroupStarted(uint256 startTime);
+    /// @notice Join the group (if not full) – can be called by anyone
+    function join() external {
+        require(!started,                 "ROSCA: already started");
+        require(!isParticipant(msg.sender), "ROSCA: already joined");
+        require(participants.length < maxParticipants, "ROSCA: full");
+
+        participants.push(msg.sender);
+        emit ParticipantJoined(msg.sender, participants.length - 1);
+
+        if (participants.length == maxParticipants) {
+            started         = true;
+            nextPayoutTime  = block.timestamp + interval;
+            emit GroupStarted(block.timestamp);
+        }
+    }
+
     /// @notice Contribute for the current cycle (pay exactly `contributionAmount`)
     function contribute() external payable {
+        require(started, "ROSCA: not started");
         require(isParticipant(msg.sender), "Not in group");
         require(msg.value == contributionAmount, "Wrong amount");
         require(!hasContributed[currentCycle][msg.sender], "Already paid");
@@ -93,6 +117,13 @@ contract ROSCA is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         currentCycle  += 1;
         nextPayoutTime = block.timestamp + interval;
         emit CycleAdvanced(currentCycle);
+    }
+
+    function triggerPayout() external {
+        require(started, "ROSCA: not started");
+        require(allContributed(), "ROSCA: contributions missing");
+        require(block.timestamp >= nextPayoutTime, "ROSCA: interval not elapsed");
+        _payout();
     }
 
     /*//////////////////////////////////////////////////////////////
