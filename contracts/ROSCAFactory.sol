@@ -30,10 +30,11 @@ contract ROSCAFactory is Ownable {
     function createGroup(
         uint256 _amount,
         uint256 _interval,
-        uint256 _maxMembers     // instead of _members[]
+        uint256 _maxMembers,     // instead of _members[]
+        bool    _useCollateral
     ) external returns (address group) {
         group = implementation.clone();
-        ROSCA(payable(group)).initialize(_amount, _interval, _maxMembers);
+        ROSCA(payable(group)).initialize(_amount, _interval, _maxMembers, _useCollateral);
 
         // 3. Book-keeping
         allGroups.push(group);

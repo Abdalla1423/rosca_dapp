@@ -26,7 +26,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   /** Create a pool with `members.length` capacity and auto-join them */
   async function newGroup(members, _contribution = contribution, _interval = 1) {
     const max = members.length;
-    const tx  = await factory.createGroup(_contribution, _interval, max, { from: alice });
+    const tx  = await factory.createGroup(_contribution, _interval, max, false, { from: alice });
     const addr = tx.logs.find((l) => l.event === 'GroupCreated').args.group;
     const pool = await ROSCA.at(addr);
 
@@ -104,7 +104,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   /*────────────── EDGE-CASE TESTS ──────────────*/
   it('rejects duplicate join before start', async () => {
     // capacity 2 pool (not started)
-    const tx   = await factory.createGroup(contribution, 1, 2, { from: alice });
+    const tx   = await factory.createGroup(contribution, 1, 2, false, { from: alice });
     const addr = tx.logs[1].args.group;
     const pool = await ROSCA.at(addr);
 
@@ -113,7 +113,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   });
 
   it('rejects join when pool is full', async () => {
-    const tx   = await factory.createGroup(contribution, 1, 2, { from: alice });
+    const tx   = await factory.createGroup(contribution, 1, 2, false, { from: alice });
     const pool = await ROSCA.at(tx.logs[1].args.group);
     await pool.join({ from: alice });
     await pool.join({ from: bob });
@@ -121,7 +121,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   });
 
   it('rejects contribution before pool started', async () => {
-    const tx   = await factory.createGroup(contribution, 1, 2, { from: alice });
+    const tx   = await factory.createGroup(contribution, 1, 2, false, { from: alice });
     const pool = await ROSCA.at(tx.logs[1].args.group);
     await pool.join({ from: alice }); // one short
     await expectRevert(pool.contribute({ from: alice, value: contribution }), 'ROSCA: not started');
@@ -225,5 +225,92 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
     await pay(group, dan); // payout to Alice, cycle++
 
     assert.equal(await group.allContributed(), false); // new cycle
+  });
+
+  it('launches pool with collateral = false, join() costs 0 ether', async () => {
+    const tx = await factory.createGroup(ETH(1), 1, 2, false, { from: alice });
+    const pool = await ROSCA.at(tx.logs[1].args.group);
+
+    // join without value
+    await pool.join({ from: alice, value: 0 });
+    await pool.join({ from: bob,   value: 0 });
+
+    // contribute & payout still work
+    await pool.contribute({ from: alice, value: ETH(1) });
+    await pool.contribute({ from: bob,   value: ETH(1) });
+    await time.increase(2);
+    await pool.triggerPayout({ from: alice });
+  });
+
+  it('pool without collateral cannot progress if someone misses payment', async () => {
+    const tx = await factory.createGroup(ETH(1), 1, 2, false, { from: alice });
+    const pool = await ROSCA.at(tx.logs[1].args.group);
+
+    await pool.join({ from: alice });
+    await pool.join({ from: bob });
+
+    await pool.contribute({ from: alice, value: ETH(1) });
+    await time.increase(2);
+
+    await expectRevert(
+      pool.triggerPayout({ from: alice }),
+      'ROSCA: contributions missing'
+    );
+  });
+
+  it('expels non-payer, uses collateral, but still pays them later', async () => {
+    const fee = ETH(1); 
+    const tx = await factory.createGroup(fee, 1, 3, true, { from: alice });
+    const pool = await ROSCA.at(tx.logs[1].args.group);
+    const payoutSize = ETH(3);
+    await pool.join({ from: alice, value: payoutSize });
+    await pool.join({ from: bob, value: payoutSize });
+    await pool.join({ from: carol, value: payoutSize });
+    // Bob & Carol pay, Alice misses
+    await pay(pool, bob);
+    await pay(pool, carol);
+
+    // wait so triggerPayout can run
+    await time.increase(3);
+    await pool.triggerPayout({ from: bob });      // anyone may call
+
+    // Alice is expelled
+    const info = await pool.memberInfo(alice);
+    assert.equal(info.expelled, true);
+
+    // Alice's collateral shrank by contributionAmount
+    assert.equal(info.collateralRemaining, ETH(2));
+
+    // Next cycles: Bob first, then Carol, then (expelled) Alice still gets paid
+    // fast-forward two more full cycles
+    for (const who of [bob, carol]) {
+      await pay(pool, who); // only active members pay fee
+      await time.increase(3);
+      await pool.triggerPayout({ from: who });
+    }
+    const trackA = await balance.tracker(alice);
+    const deltaA = await trackA.delta();
+    assert(deltaA.gte(ETH(2.9))); // Alice received ~3 ETH (minus gas)
+
+  });
+
+  it('returns full collateral if never expelled', async () => {
+    const fee = ETH(1); 
+    const tx = await factory.createGroup(fee, 1, 3, true, { from: alice });
+    const pool = await ROSCA.at(tx.logs[1].args.group);
+    const payoutSize = ETH(3);
+    await pool.join({ from: alice, value: payoutSize });
+    await pool.join({ from: bob, value: payoutSize });
+    await pool.join({ from: carol, value: payoutSize });
+    // everyone pays every round
+    for (let round = 0; round < 3; ++round) {
+      for (const who of [alice, bob, carol]) await pay(pool, who);
+      await time.increase(3);
+      await pool.triggerPayout({ from: [alice, bob, carol][round] });
+    }
+    const pre = await web3.eth.getBalance(alice);
+    await pool.withdrawCollateral({ from: alice });
+    const post = await web3.eth.getBalance(alice);
+    assert(post > pre, 'collateral not refunded');
   });
 });
