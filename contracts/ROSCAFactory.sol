@@ -51,4 +51,9 @@ contract ROSCAFactory is Ownable {
     function groupsOf(address creator) external view returns (address[] memory) {
         return groupsByCreator[creator];
     }
+    function getAllGroups() external view returns (address[] memory) {
+    return allGroups;
+}
+
+    
 }

@@ -61,15 +61,15 @@
     "absolutePath": "@openzeppelin/contracts/interfaces/IERC1967.sol",
     "exportedSymbols": {
       "IERC1967": [
-        711
+        859
       ]
     },
-    "id": 712,
+    "id": 860,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 692,
+        "id": 840,
         "literals": [
           "solidity",
           "^",
@@ -77,7 +77,7 @@
           ".20"
         ],
         "nodeType": "PragmaDirective",
-        "src": "107:24:4"
+        "src": "107:24:5"
       },
       {
         "abstract": false,
@@ -86,47 +86,47 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "documentation": {
-          "id": 693,
+          "id": 841,
           "nodeType": "StructuredDocumentation",
-          "src": "133:101:4",
+          "src": "133:101:5",
           "text": " @dev ERC-1967: Proxy Storage Slots. This interface contains the events defined in the ERC."
         },
         "fullyImplemented": true,
-        "id": 711,
+        "id": 859,
         "linearizedBaseContracts": [
-          711
+          859
         ],
         "name": "IERC1967",
-        "nameLocation": "245:8:4",
+        "nameLocation": "245:8:5",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "anonymous": false,
             "documentation": {
-              "id": 694,
+              "id": 842,
               "nodeType": "StructuredDocumentation",
-              "src": "260:68:4",
+              "src": "260:68:5",
               "text": " @dev Emitted when the implementation is upgraded."
             },
             "eventSelector": "bc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b",
-            "id": 698,
+            "id": 846,
             "name": "Upgraded",
-            "nameLocation": "339:8:4",
+            "nameLocation": "339:8:5",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 697,
+              "id": 845,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 696,
+                  "id": 844,
                   "indexed": true,
                   "mutability": "mutable",
                   "name": "implementation",
-                  "nameLocation": "364:14:4",
+                  "nameLocation": "364:14:5",
                   "nodeType": "VariableDeclaration",
-                  "scope": 698,
-                  "src": "348:30:4",
+                  "scope": 846,
+                  "src": "348:30:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -134,10 +134,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 695,
+                    "id": 843,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "348:7:4",
+                    "src": "348:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -147,37 +147,37 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "347:32:4"
+              "src": "347:32:5"
             },
-            "src": "333:47:4"
+            "src": "333:47:5"
           },
           {
             "anonymous": false,
             "documentation": {
-              "id": 699,
+              "id": 847,
               "nodeType": "StructuredDocumentation",
-              "src": "386:67:4",
+              "src": "386:67:5",
               "text": " @dev Emitted when the admin account has changed."
             },
             "eventSelector": "7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f",
-            "id": 705,
+            "id": 853,
             "name": "AdminChanged",
-            "nameLocation": "464:12:4",
+            "nameLocation": "464:12:5",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 704,
+              "id": 852,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 701,
+                  "id": 849,
                   "indexed": false,
                   "mutability": "mutable",
                   "name": "previousAdmin",
-                  "nameLocation": "485:13:4",
+                  "nameLocation": "485:13:5",
                   "nodeType": "VariableDeclaration",
-                  "scope": 705,
-                  "src": "477:21:4",
+                  "scope": 853,
+                  "src": "477:21:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -185,10 +185,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 700,
+                    "id": 848,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "477:7:4",
+                    "src": "477:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -199,14 +199,14 @@
                 },
                 {
                   "constant": false,
-                  "id": 703,
+                  "id": 851,
                   "indexed": false,
                   "mutability": "mutable",
                   "name": "newAdmin",
-                  "nameLocation": "508:8:4",
+                  "nameLocation": "508:8:5",
                   "nodeType": "VariableDeclaration",
-                  "scope": 705,
-                  "src": "500:16:4",
+                  "scope": 853,
+                  "src": "500:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -214,10 +214,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 702,
+                    "id": 850,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "500:7:4",
+                    "src": "500:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -227,37 +227,37 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "476:41:4"
+              "src": "476:41:5"
             },
-            "src": "458:60:4"
+            "src": "458:60:5"
           },
           {
             "anonymous": false,
             "documentation": {
-              "id": 706,
+              "id": 854,
               "nodeType": "StructuredDocumentation",
-              "src": "524:59:4",
+              "src": "524:59:5",
               "text": " @dev Emitted when the beacon is changed."
             },
             "eventSelector": "1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e",
-            "id": 710,
+            "id": 858,
             "name": "BeaconUpgraded",
-            "nameLocation": "594:14:4",
+            "nameLocation": "594:14:5",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 709,
+              "id": 857,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 708,
+                  "id": 856,
                   "indexed": true,
                   "mutability": "mutable",
                   "name": "beacon",
-                  "nameLocation": "625:6:4",
+                  "nameLocation": "625:6:5",
                   "nodeType": "VariableDeclaration",
-                  "scope": 710,
-                  "src": "609:22:4",
+                  "scope": 858,
+                  "src": "609:22:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -265,10 +265,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 707,
+                    "id": 855,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "609:7:4",
+                    "src": "609:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -278,22 +278,22 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "608:24:4"
+              "src": "608:24:5"
             },
-            "src": "588:45:4"
+            "src": "588:45:5"
           }
         ],
-        "scope": 712,
-        "src": "235:400:4",
+        "scope": 860,
+        "src": "235:400:5",
         "usedErrors": [],
         "usedEvents": [
-          698,
-          705,
-          710
+          846,
+          853,
+          858
         ]
       }
     ],
-    "src": "107:529:4"
+    "src": "107:529:5"
   },
   "compiler": {
     "name": "solc",
@@ -301,7 +301,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.16",
-  "updatedAt": "2025-06-22T14:20:43.862Z",
+  "updatedAt": "2025-07-06T12:11:20.162Z",
   "devdoc": {
     "details": "ERC-1967: Proxy Storage Slots. This interface contains the events defined in the ERC.",
     "events": {
