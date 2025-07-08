@@ -209,6 +209,7 @@ contract ROSCA is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         return true;
     }
 
+
     /*//////////////////////////////////////////////////////////////
                                 ADMIN
     //////////////////////////////////////////////////////////////*/
@@ -231,4 +232,9 @@ contract ROSCA is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     //////////////////////////////////////////////////////////////*/
     receive() external payable { revert("Use contribute()"); }
     fallback() external payable { revert("Bad call"); }
+    
+    function getParticipants() public view returns (address[] memory) {
+    return participants;
+}
+
 }
