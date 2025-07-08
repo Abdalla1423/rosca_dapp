@@ -66,13 +66,13 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   it('only participants can contribute', async () => {
     await expectRevert(
       group.contribute({ from: erin, value: contribution }),
-      'Not in group'
+      'ROSCA: not in group'
     );
   });
 
   it('rejects duplicate payment', async () => {
     await pay(group, alice);
-    await expectRevert(pay(group, alice), 'Already paid');
+    await expectRevert(pay(group, alice), 'ROSCA: already paid');
   });
 
   it('independent pools do not share state', async () => {
@@ -130,7 +130,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   it('rejects wrong contribution amount', async () => {
     await expectRevert(
       group.contribute({ from: alice, value: ETH(0.5) }),
-      'Wrong amount'
+      'ROSCA: wrong amount'
     );
   });
 
@@ -195,7 +195,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
     const pool = await newGroup([alice, bob], contribution, 1);
     await pay(pool, alice); // Bob missing
     await time.increase(2);
-    await expectRevert(pool.triggerPayout(), 'ROSCA: contributions missing');
+    await expectRevert(pool.triggerPayout(), 'ROSCA: unpaid member');
   });
 
   it('reverts triggerPayout if interval not elapsed', async () => {
@@ -203,7 +203,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
     await pay(pool, alice);
     await pay(pool, bob);
     // interval not done
-    await expectRevert(pool.triggerPayout(), 'ROSCA: interval not elapsed');
+    await expectRevert(pool.triggerPayout(), 'ROSCA: interval.');
   });
 
   it('reverts triggerPayout if pool not started', async () => {
@@ -254,7 +254,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
 
     await expectRevert(
       pool.triggerPayout({ from: alice }),
-      'ROSCA: contributions missing'
+      'ROSCA: unpaid member'
     );
   });
 
