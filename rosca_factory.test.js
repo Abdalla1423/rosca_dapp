@@ -4,6 +4,7 @@ const { expectRevert, balance, time } = require('@openzeppelin/test-helpers');
 
 const ROSCA        = artifacts.require('ROSCA');
 const ROSCAFactory = artifacts.require('ROSCAFactory');
+const MULTISIG = "0x1234567890123456789012345678901234567890";
 
 // Use Truffle's `contract` wrapper so the accounts array is injected.
 contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
@@ -26,7 +27,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   /** Create a pool with `members.length` capacity and auto-join them */
   async function newGroup(members, _contribution = contribution, _interval = 1) {
     const max = members.length;
-    const tx  = await factory.createGroup(_contribution, _interval, max, false, { from: alice });
+    const tx  = await factory.createGroup(_contribution, _interval, max, false, MULTISIG);
     const addr = tx.logs.find((l) => l.event === 'GroupCreated').args.group;
     const pool = await ROSCA.at(addr);
 
@@ -107,7 +108,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   /*────────────── EDGE-CASE TESTS ──────────────*/
   it('rejects duplicate join before start', async () => {
     // capacity 2 pool (not started)
-    const tx   = await factory.createGroup(contribution, 1, 2, false, { from: alice });
+    const tx   = await factory.createGroup(contribution, 1, 2, false, MULTISIG);
     const addr = tx.logs[1].args.group;
     const pool = await ROSCA.at(addr);
 
@@ -116,7 +117,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   });
 
   it('rejects join when pool is full', async () => {
-    const tx   = await factory.createGroup(contribution, 1, 2, false, { from: alice });
+    const tx   = await factory.createGroup(contribution, 1, 2, false, MULTISIG);
     const pool = await ROSCA.at(tx.logs[1].args.group);
     await pool.join({ from: alice });
     await pool.join({ from: bob });
@@ -124,7 +125,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   });
 
   it('rejects contribution before pool started', async () => {
-    const tx   = await factory.createGroup(contribution, 1, 2, false, { from: alice });
+    const tx   = await factory.createGroup(contribution, 1, 2, false, MULTISIG);
     const pool = await ROSCA.at(tx.logs[1].args.group);
     await pool.join({ from: alice }); // one short
     await expectRevert(pool.contribute({ from: alice, value: contribution }), 'ROSCA: not started');
@@ -213,7 +214,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
 
   it('reverts triggerPayout if pool not started', async () => {
     // deploy but do not join
-    const tx = await factory.createGroup(contribution, 5, 2, { from: alice });
+    const tx = await factory.createGroup(contribution, 5, 2, false, MULTISIG);
     const addr = tx.logs[1].args.group;
     const pool = await ROSCA.at(addr);
     await expectRevert(pool.triggerPayout(), 'ROSCA: not started');
@@ -234,7 +235,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   });
 
   it('launches pool with collateral = false, join() costs 0 ether', async () => {
-    const tx = await factory.createGroup(ETH(1), 1, 2, false, { from: alice });
+    const tx = await factory.createGroup(ETH(1), 1, 2, false, MULTISIG);
     const pool = await ROSCA.at(tx.logs[1].args.group);
 
     // join without value
@@ -249,7 +250,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   });
 
   it('pool without collateral cannot progress if someone misses payment', async () => {
-    const tx = await factory.createGroup(ETH(1), 1, 2, false, { from: alice });
+    const tx = await factory.createGroup(ETH(1), 1, 2, false, MULTISIG);
     const pool = await ROSCA.at(tx.logs[1].args.group);
 
     await pool.join({ from: alice });
@@ -266,7 +267,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
 
   it('expels non-payer, uses collateral, but still pays them later', async () => {
     const fee = ETH(1); 
-    const tx = await factory.createGroup(fee, 1, 3, true, { from: alice });
+    const tx = await factory.createGroup(fee, 1, 3, true, MULTISIG);
     const pool = await ROSCA.at(tx.logs[1].args.group);
     const payoutSize = ETH(3);
     await pool.join({ from: alice, value: payoutSize });
@@ -312,7 +313,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
 
   it('returns full collateral if never expelled', async () => {
     const fee = ETH(1); 
-    const tx = await factory.createGroup(fee, 1, 3, true, { from: alice });
+    const tx = await factory.createGroup(fee, 1, 3, true, MULTISIG);
     const pool = await ROSCA.at(tx.logs[1].args.group);
     const payoutSize = ETH(3);
     await pool.join({ from: alice, value: payoutSize });
