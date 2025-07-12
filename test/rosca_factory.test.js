@@ -40,6 +40,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
   const pay = (pool, from, amount = contribution) =>
     pool.contribute({ from, value: amount });
 
+
   /*────────────────── beforeEach ──────────────────*/
   beforeEach(async () => {
     await freshFactory();
@@ -57,6 +58,8 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
     await pay(group, carol);
     await time.increase(2); // interval = 1s
     await pay(group, dan);  // triggers payout
+    await group.triggerPayout({ from: alice });
+
 
     const gain = await tracker.delta();
     const min  = web3.utils.toBN(ETH(2.9));
@@ -158,6 +161,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
     await time.increase(2);
     const trackerA = await balance.tracker(alice);
     await pay(pool, alice); // last payment triggers payout to Alice
+    await pool.triggerPayout({ from: bob }); // anyone can trigger
     const deltaA = await trackerA.delta();
     assert(deltaA.gte(ETH(2.9)));
 
@@ -167,6 +171,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
     await time.increase(2);
     const trackerB = await balance.tracker(bob);
     await pay(pool, bob);
+    await pool.triggerPayout({ from: carol });
     const deltaB = await trackerB.delta();
     assert(deltaB.gte(ETH(2.9)));
   });
@@ -223,6 +228,7 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
     await pay(group, carol);
     await time.increase(2);
     await pay(group, dan); // payout to Alice, cycle++
+    await group.triggerPayout({ from: alice });
 
     assert.equal(await group.allContributed(), false); // new cycle
   });
@@ -283,11 +289,21 @@ contract('ROSCA – multi-pool flow & edge cases', (accounts) => {
 
     // Next cycles: Bob first, then Carol, then (expelled) Alice still gets paid
     // fast-forward two more full cycles
-    for (const who of [bob, carol]) {
-      await pay(pool, who); // only active members pay fee
-      await time.increase(3);
-      await pool.triggerPayout({ from: who });
-    }
+    await pay(pool, bob);
+    await pay(pool, carol);
+
+    // wait so triggerPayout can run
+    await time.increase(3);
+    await pool.triggerPayout({ from: bob });      // anyone may call
+
+    await pay(pool, bob);
+    await pay(pool, carol);
+
+    // wait so triggerPayout can run
+    await time.increase(3);
+    await pool.triggerPayout({ from: bob });      // anyone may call
+
+    
     const trackA = await balance.tracker(alice);
     const deltaA = await trackA.delta();
     assert(deltaA.gte(ETH(2.9))); // Alice received ~3 ETH (minus gas)

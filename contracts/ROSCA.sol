@@ -3,34 +3,36 @@ pragma solidity ^0.8.22;
 
 /*
  *  ┌────────────────────────────────────────────────────────────┐
- *  │  Rotating Savings & Credit Association (ROSCA) – v2.0     │
+ *  │  Rotating Savings & Credit Association (ROSCA) – v2.1     │
  *  └────────────────────────────────────────────────────────────┘
- *  Key fixes                                       
- *  ────────────────────────────────────────────────
- *  1. LIMITED ROUNDS
- *     - The group now terminates after exactly `participants.length` cycles.
- *     - Emits `GroupFinished` and blocks further contributions / payouts.
- *  2. RE‑ENTRANCY GUARD (C‑1)
- *     - Inherits `ReentrancyGuardUpgradeable` and marks external‑ETH functions `nonReentrant`.
- *     - State is advanced before the external transfer (checks‑effects‑interactions).
- *  3. DROPPED UUPS (C‑3)
- *     - `UUPSUpgradeable` inheritance and its authorize hook removed.
- *     - Contract is still Initializable for clone deployment but is *not* upgradeable.
+ *  Incremental fixes
+ *  ─────────────────────────────────────────────────────────────
+ *  • **D‑1 Unbounded loops**
+ *      – Hard‑cap `maxParticipants` at 100 (safe gas on L1).
+ *  • **D‑2 Storage bloat**
+ *      – Track contributions only for the *current* cycle with
+ *        `mapping(address ⇒ bool) hasContributed` **plus** a
+ *        `contributedCount` counter, then reset both each round.
  */
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "truffle/console.sol";
+
 
 contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using Address for address payable;
+
+    /* ─────────── CONSTANTS ─────────── */
+    uint256 public constant MAX_PARTICIPANTS = 100; // D‑1 gas‑safe cap
 
     /* ───────────────────────────────────────────── IMMUTABLE‑ish PARAMS ─────────────────────────────────────────── */
     uint256 public contributionAmount;   // fixed per‑round payment (wei)
     uint256 public interval;             // min seconds between payouts
     address[] public participants;       // roster (constant after start)
-    uint256  public maxParticipants;     // hard cap == #rounds
+    uint256  public maxParticipants;     // hard cap == #rounds ≤ 100
     bool     public started;             // set true once roster full
     bool     public finished;            // becomes true when all rounds complete
     bool     public collateralEnabled;   // true ⇒ deposit full‑payout bond
@@ -47,7 +49,11 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable 
     /* ─────────────────────────────────────────────────── STATE ─────────────────────────────────────────────────── */
     uint256 public currentCycle;          // 0‑based index
     uint256 public nextPayoutTime;        // unix ts
-    mapping(uint256 => mapping(address => bool)) public hasContributed; // cycle ⇒ member ⇒ paid?
+
+    // D‑2: current‑cycle contribution bitmap + counter
+    mapping(address => bool) public hasContributed; // participant ⇒ paid?
+    uint256 public contributedCount;
+    uint256 public expelledCount; // count of members expelled for non‑payment
 
     /* ─────────────────────────────────────────────────── EVENTS ────────────────────────────────────────────────── */
     event Contributed(address indexed participant, uint256 indexed cycle, uint256 amount);
@@ -60,7 +66,6 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable 
     event CollateralRefunded(address indexed member, uint256 amount);
 
     /* ─────────────────────────── INITIALISATION ─────────────────────────── */
-    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
@@ -71,7 +76,7 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable 
         uint256 _maxParticipants,
         bool    _useCollateral
     ) external initializer {
-        require(_maxParticipants > 1, "need => 2 participants");
+        require(_maxParticipants > 1 && _maxParticipants <= MAX_PARTICIPANTS, "participants out of bounds");
 
         __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
@@ -120,9 +125,10 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable 
         require(!finished,        "ROSCA: finished");
         require(isParticipant(msg.sender),   "ROSCA: not in group");
         require(msg.value == contributionAmount, "ROSCA: wrong amount");
-        require(!hasContributed[currentCycle][msg.sender], "ROSCA: already paid");
+        require(!hasContributed[msg.sender], "ROSCA: already paid");
 
-        hasContributed[currentCycle][msg.sender] = true;
+        hasContributed[msg.sender] = true;
+        contributedCount += 1;
         emit Contributed(msg.sender, currentCycle, msg.value);
     }
 
@@ -132,30 +138,34 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable 
         require(!finished,                 "ROSCA: finished");
         require(block.timestamp >= nextPayoutTime, "ROSCA: interval");
 
-        // 1️⃣ cover or fail missing contributors
+        // 1️⃣ cover or fail missing contributors – also prepare for next cycle (reset flags)
         for (uint256 i = 0; i < participants.length; ++i) {
             address p = participants[i];
-            if (!hasContributed[currentCycle][p]) {
+            if (!hasContributed[p]) {
                 if (collateralEnabled) {
-                    // burn collateral one contribution worth
-                    memberInfo[p].collateralRemaining -= contributionAmount; // underflow protected by Solidity 0.8
-                    memberInfo[p].expelled = true;
-                    hasContributed[currentCycle][p] = true;
+                    if (!memberInfo[p].expelled) {
+                        memberInfo[p].expelled = true;
+                        expelledCount += 1;
+                    }
+                    memberInfo[p].collateralRemaining -= contributionAmount;
+                    
                     emit CollateralUsed(p, currentCycle, contributionAmount);
                 } else {
                     revert("ROSCA: unpaid member");
                 }
             }
+            // reset bitmap for next cycle
+            hasContributed[p] = false;
         }
 
-        // double‑check all paid
-        require(allContributed(), "ROSCA: unpaid after cover");
+        // verify total paid (counter + collateral path == participants)
+        require(contributedCount + expelledCount == participants.length, "ROSCA: contributions mismatch");
+        contributedCount = 0; // reset counter for next cycle
 
-        // 2️⃣ compute new state *before* external interaction (checks‑effects‑interactions)
+        // 2️⃣ state update first (CEI)
         address recipient = participants[currentCycle % participants.length];
         uint256 pot       = contributionAmount * participants.length;
 
-        // advance cycle
         currentCycle += 1;
         if (currentCycle == participants.length) {
             finished = true;
@@ -165,7 +175,7 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable 
             emit CycleAdvanced(currentCycle);
         }
 
-        // 3️⃣ transfer pot – uses safe send (2300 gas) fallback to call with limited gas
+        // 3️⃣ transfer pot
         payable(recipient).sendValue(pot);
         emit Payout(recipient, currentCycle - 1, pot);
     }
@@ -190,11 +200,14 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable 
         return false;
     }
 
-    function allContributed() public view returns (bool) {
-        for (uint256 i = 0; i < participants.length; ++i) {
-            if (!hasContributed[currentCycle][participants[i]]) return false;
-        }
-        return true;
+    function allContributed() external view returns (bool) {
+        return contributedCount == participants.length;
+    }
+
+    /* ─────────────────────────── ADMIN ─────────────────────────── */
+    function emergencyWithdraw(address to) external onlyOwner {
+        require(!started, "ROSCA: already started");
+        payable(to).sendValue(address(this).balance);
     }
 
     /* ─────────────────────────── FALLBACK GUARDS ─────────────────────────── */
