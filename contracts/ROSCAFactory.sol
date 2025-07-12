@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IROSCAInit {
     function initialize(
-        uint256, uint256, uint256, bool
+        uint256, uint256, uint256, bool, address
     ) external;
 }
 /*
@@ -72,7 +72,8 @@ contract ROSCAFactory is Ownable {
         uint256 _amount,
         uint256 _interval,
         uint256 _maxMembers,
-        bool    _useCollateral
+        bool    _useCollateral,
+        address _multisig
     ) external returns (address group) {
         // 1. Clone the current implementation
         group = implementation.clone();
@@ -82,7 +83,8 @@ contract ROSCAFactory is Ownable {
             _amount,
             _interval,
             _maxMembers,
-            _useCollateral
+            _useCollateral,
+            _multisig
         );
 
         // 3. Book-keeping
