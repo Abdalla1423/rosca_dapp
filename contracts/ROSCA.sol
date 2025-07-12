@@ -147,6 +147,7 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable 
                         memberInfo[p].expelled = true;
                         expelledCount += 1;
                     }
+                    require(memberInfo[p].collateralRemaining >= contributionAmount, "ROSCA: collateral empty");
                     memberInfo[p].collateralRemaining -= contributionAmount;
                     
                     emit CollateralUsed(p, currentCycle, contributionAmount);
