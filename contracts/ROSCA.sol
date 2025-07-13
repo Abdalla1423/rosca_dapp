@@ -27,6 +27,8 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable,
     uint256 public contributionAmount;
     uint256 public interval;
     address[] public participants;
+    address[] public payoutOrder;           // final schedule (filled on start)
+
     uint256  public maxParticipants;
     bool     public started;
     bool     public finished;
@@ -37,6 +39,9 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable,
         bool    expelled;
     }
     mapping(address => MemberInfo) public memberInfo;
+
+    // preference: latest acceptable cycle (1‑indexed). 0 == none / >max
+    mapping(address => uint256) public latestDesiredCycle;
 
     uint256 public payoutSize;
     uint256 public collateralRequirement;
@@ -58,6 +63,7 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable,
     event GroupFinished(uint256 finishedAt);
     event CollateralUsed(address indexed debtor, uint256 indexed cycle, uint256 amount);
     event CollateralRefunded(address indexed member, uint256 amount);
+    event ScheduleFinalised(address[] order);
 
     /* ───────────────────────── INTERNAL HELPERS ───────────────────────── */
     function _safeTransfer(address payable to, uint256 amount) internal {
@@ -106,7 +112,8 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable,
     function unpause() external onlyOwner { _unpause(); }
 
     /* ─────────────────────────── PARTICIPATION ─────────────────────────── */
-    function join() external payable whenNotPaused {
+    /// @param _latestCycle 1‑indexed deadline; 0 or >maxParticipants = no preference
+    function join(uint256 _latestCycle) external payable whenNotPaused {
         require(!started,              "ROSCA: already started");
         require(!finished,             "ROSCA: finished");
         require(!isParticipant(msg.sender), "ROSCA: already joined");
@@ -121,12 +128,62 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable,
 
         participants.push(msg.sender);
         emit ParticipantJoined(msg.sender, participants.length - 1);
+        latestDesiredCycle[msg.sender] = _latestCycle;
 
         if (participants.length == maxParticipants) {
             started = true;
+            _finaliseSchedule();
             nextPayoutTime = block.timestamp + interval;
             emit GroupStarted(block.timestamp);
         }
+    }
+
+    function _finaliseSchedule() internal {
+        uint256 n = participants.length;
+        address[] memory order = new address[](n);
+        bool[]   memory taken = new bool[](n);
+
+        // 1. Collect preference list sorted by deadline (insertion sort – n<=100)
+        address[] memory prefs = new address[](n);
+        uint256 prefCount = 0;
+        for (uint i = 0; i < n; ++i) {
+            address p = participants[i];
+            uint256 d = latestDesiredCycle[p];
+            if (d != 0 && d <= n) {
+                // insertion into prefs by ascending d
+                uint j = prefCount;
+                while (j > 0 && latestDesiredCycle[prefs[j-1]] > d) {
+                    prefs[j] = prefs[j-1];
+                    j--; }
+                prefs[j] = p;
+                prefCount++;
+            }
+        }
+
+        // 2. Place preferred participants greedily
+        for (uint i = 0; i < prefCount; ++i) {
+            address p = prefs[i];
+            uint256 deadline = latestDesiredCycle[p];
+            for (uint slot = 0; slot < deadline; ++slot) {
+                if (!taken[slot]) { order[slot] = p; taken[slot] = true; break; }
+            }
+        }
+
+        // 3. Fill remaining slots FCFS
+        uint slotIdx = 0;
+        for (uint i = 0; i < n; ++i) {
+            address p = participants[i];
+            if (/* not yet placed */ latestDesiredCycle[p] == 0 || latestDesiredCycle[p] > n) {
+                // place where available
+                while (slotIdx < n && taken[slotIdx]) slotIdx++;
+                if (slotIdx < n) { order[slotIdx] = p; taken[slotIdx] = true; slotIdx++; }
+            }
+        }
+        // Any still empty slots → fill with any remaining (unlikely)
+        for (uint i = 0; i < n; ++i) if (!taken[i]) order[i] = participants[i];
+
+        payoutOrder = order;
+        emit ScheduleFinalised(order);
     }
 
     function contribute() external payable whenNotPaused {
@@ -134,19 +191,47 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable,
         require(!finished, "ROSCA: finished");
         require(isParticipant(msg.sender), "ROSCA: not in group");
         require(msg.value == contributionAmount, "ROSCA: wrong amount");
-        require(!hasContributed[msg.sender], "ROSCA: already paid");
 
+        if (block.timestamp >= nextPayoutTime && hasContributed[msg.sender]) {
+            triggerPayout(); // auto-trigger if overdue
+        } 
+
+        require(!hasContributed[msg.sender], "ROSCA: already paid");
         hasContributed[msg.sender] = true;
         contributedCount += 1;
         emit Contributed(msg.sender, currentCycle, msg.value);
     }
 
     /* ───────────────────────── CORE PAYOUT ───────────────────────── */
-    function triggerPayout() external nonReentrant whenNotPaused {
+    function triggerPayout() public nonReentrant whenNotPaused {
         require(started, "ROSCA: not started");
         require(!finished, "ROSCA: finished");
         require(block.timestamp >= nextPayoutTime, "ROSCA: interval");
 
+        checkUsersContributionAndExpel();
+
+        // verify total paid (counter + collateral path == participants)
+        require(contributedCount + expelledCount == participants.length, "ROSCA: contributions mismatch");
+        contributedCount = 0; // reset counter for next cycle
+
+        address recipient = payoutOrder[currentCycle % participants.length];
+        uint256 pot       = memberInfo[recipient].expelled ? payoutSize
+                                                            : (payoutSize * 9) / 10;
+
+        currentCycle += 1;
+        if (currentCycle == participants.length) {
+            finished = true;
+            emit GroupFinished(block.timestamp);
+        } else {
+            nextPayoutTime = block.timestamp + interval;
+            emit CycleAdvanced(currentCycle);
+        }
+
+        payable(recipient).sendValue(pot);
+        emit Payout(recipient, currentCycle - 1, pot);
+    }
+
+    function checkUsersContributionAndExpel() internal {
         for (uint256 i = 0; i < participants.length; ++i) {
             address p = participants[i];
             if (!hasContributed[p]) {
@@ -166,26 +251,6 @@ contract ROSCA is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable,
             // reset bitmap for next cycle
             hasContributed[p] = false;
         }
-
-        // verify total paid (counter + collateral path == participants)
-        require(contributedCount + expelledCount == participants.length, "ROSCA: contributions mismatch");
-        contributedCount = 0; // reset counter for next cycle
-
-        address recipient = participants[currentCycle % participants.length];
-        uint256 pot       = contributionAmount * participants.length;
-
-        currentCycle += 1;
-        if (currentCycle == participants.length) {
-            finished = true;
-            emit GroupFinished(block.timestamp);
-        } else {
-            nextPayoutTime = block.timestamp + interval;
-            emit CycleAdvanced(currentCycle);
-        }
-
-        // 3️⃣ transfer pot
-        payable(recipient).sendValue(pot);
-        emit Payout(recipient, currentCycle - 1, pot);
     }
 
     function withdrawCollateral() external nonReentrant whenNotPaused {

@@ -19,6 +19,7 @@ async function spawnGroup(
     interval     = 1,
     collateral   = false,
     owner        = members[0],
+    wishes       = [],         // NEW: array of uint latestCycle per member
   } = {}
 ) {
   const max = members.length;
@@ -28,9 +29,11 @@ async function spawnGroup(
   const addr  = tx.logs.find(l => l.event === "GroupCreated").args.group;
   const group = await ROSCA.at(addr);
 
-  for (const m of members) {
+  for (let i = 0; i < members.length; i++) {
+    const m  = members[i];
+    const lc = wishes[i] || 0;
     const val = collateral ? contribution * max : 0;
-    await group.join({ from: m, value: val });
+    await group.join(lc, { from: m, value: val });
   }
   return { group, contribution };
 }

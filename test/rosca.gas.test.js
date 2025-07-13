@@ -45,7 +45,7 @@ contract("ROSCA – gas profile", (accounts) => {
 
     /* 3. Members join */
     for (const p of roster) {
-      const rec = await group.join({ from: p });         // value = 0 (no collateral)
+      const rec = await group.join(0, { from: p });         // value = 0 (no collateral)
       addGas(p, rec.receipt.gasUsed);
     }
 

@@ -24,9 +24,8 @@ contract("ROSCA end-to-end", (accounts) => {
   describe("basic flow", () => {
     it("pays pot to scheduled recipient", async () => {
       const gain = await balance.tracker(alice);
-      await Promise.all([bob, carol, dan].map((u) => pay(group, u, contribution)));
+      await Promise.all([alice, bob, carol, dan].map((u) => pay(group, u, contribution)));
       await later();
-      await pay(group, alice, contribution);
       await group.triggerPayout({ from: bob });
 
       const delta = await gain.delta();
@@ -47,8 +46,7 @@ contract("ROSCA end-to-end", (accounts) => {
   describe("interval & rotation", () => {
     it("blocks payout before interval", async () => {
       const { group: g } = await spawnGroup(factory, [alice, bob, carol], { interval: 5 });
-      await Promise.all([alice, bob].map((u) => pay(g, u, contribution)));
-      await pay(g, carol, contribution);
+      await Promise.all([alice, bob, carol].map((u) => pay(g, u, contribution)));
       assert.equal(await web3.eth.getBalance(g.address), ETH(3));
     });
 
@@ -56,18 +54,16 @@ contract("ROSCA end-to-end", (accounts) => {
       const { group: g } = await spawnGroup(factory, [alice, bob, carol]);
 
       /* cycle 0 — Alice */
-      await Promise.all([bob, carol].map((u) => pay(g, u, contribution)));
+      await Promise.all([alice, bob, carol].map((u) => pay(g, u, contribution)));
       await later();
       const gainA = await balance.tracker(alice);
-      await pay(g, alice, contribution);
       await g.triggerPayout({ from: carol });
       assert((await gainA.delta()).gte(toBN(ETH(1.8))));
 
       /* cycle 1 — Bob */
-      await Promise.all([alice, carol].map((u) => pay(g, u, contribution)));
+      await Promise.all([alice, bob, carol].map((u) => pay(g, u, contribution)));
       await later();
       const gainB = await balance.tracker(bob);
-      await pay(g, bob, contribution);
       await g.triggerPayout({ from: alice });
       assert((await gainB.delta()).gte(toBN(ETH(1.8))));
     });
@@ -132,9 +128,8 @@ contract("ROSCA end-to-end", (accounts) => {
     });
 
     it("paused contract blocks triggerPayout", async () => {
-      await Promise.all([bob, carol, dan].map((u) => pay(group, u, contribution)));
+      await Promise.all([alice, bob, carol, dan].map((u) => pay(group, u, contribution)));
       await later();
-      await pay(group, alice, contribution);
 
       await group.pause({ from: alice });
       await expectRevert.unspecified(group.triggerPayout({ from: bob }));
@@ -183,9 +178,8 @@ describe("factory & owner logic", () => {
 
       await Promise.all([alice, bob, carol].map((u) => pay(group, u, contribution)));
       await later();
-      await pay(group, dan, contribution);
-      await group.triggerPayout({ from: alice });
-
+      await expectRevert(group.triggerPayout({ from: alice }), "ROSCA: unpaid member");
+      
       assert.equal(await group.allContributed(), false);
     });
   });
