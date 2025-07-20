@@ -104,13 +104,13 @@ contract("ROSCA end-to-end", (accounts) => {
         await later(2);
         await g.triggerPayout({ from: [alice, bob, carol][r] });
       }
-      await g.withdrawCollateral({ from: alice });
-      await expectRevert(g.withdrawCollateral({ from: alice }), "ROSCA: none");
+      await g.refundCollateral({ from: alice });
+      await expectRevert(g.refundCollateral({ from: alice }), "ROSCA: none");
     });
 
     it("non-finished pool rejects collateral withdrawal", async () => {
       await Promise.all([alice, bob, carol].map((u) => pay(g, u, fee)));
-      await expectRevert(g.withdrawCollateral({ from: alice }), "ROSCA: rounds ongoing");
+      await expectRevert(g.refundCollateral({ from: alice }), "ROSCA: rounds ongoing");
     });
   });
 
